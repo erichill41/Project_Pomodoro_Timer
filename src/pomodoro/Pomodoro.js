@@ -1,114 +1,118 @@
 import React, { useState } from "react";
-import classNames from "../utils/class-names/index";
+import classNames from "../utils/class-names";
 import useInterval from "../utils/useInterval";
 
+import CreateSession from "./CreateSession";
+import DisplaySession from "./DisplaySession";
 
-import FocusTime from "./FocusTime";
-import BreakTime from "./BreakTime";
-import RemainingTime from "./RemainingTime";
+// These functions are defined outside of the component to insure they do not have access to state
+// and are, therefore more likely to be pure.
 
-
-function Pomodoro() {
-  // Timer starts out paused
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  
-  // creating intial session properties
-  const sessionInitialState = {
-    active: false,
-    focusSession: true,
-    sessionTypeTitle: "Focusing",
-    focusTime: 1500,
-    breakTime: 300,
-    currentTime: 0,
-    timer: 1500,
-  }
-
-  // setting initial state of session to the above initial state object
-  const [session, setSession] = useState({...sessionInitialState});
-
-  // using useInterval to play audio and change the session type with function
-  useInterval(() => {
-    setSession({...session, timer: session.timer -1,});
-    if (session.timer === 0) {
-      new Audio("https://bigsoundbank.com/UPLOAD/mp3/1482.mp3").play();
-      changeSessionType(session, setSession);  
-    
-    }},
-    isTimerRunning ? 100 : null
-  
-  );
-
-  // function to change the session type between focus and break
-  function changeSessionType(session, setSession) {
-    if (session.focusSession) {
-        setSession({
-            ...session,
-            focusSession: false,
-            sessionTypeTitle: "On Break",
-            currentTime: session.breakTime,
-            timer: session.breakTime,
-        });
-    } else {
-        setSession({
-            ...session,
-            focusSession: true,
-            sessionTypeTitle: "Focusing",
-            currentTime: session.focusTime,
-            timer: session.focusTime,
-        });
-    }
+/**
+ * Update the session state with new state after each tick of the interval.
+ * @param prevState
+ *  the previous session state
+ * @returns
+ *  new session state with timing information updated.
+ */
+function nextTick(prevState) {
+  const timeRemaining = Math.max(0, prevState.timeRemaining - 1);
+  return {
+    ...prevState,
+    timeRemaining,
+  };
 }
 
+/**
+ * Higher order function that returns a function to update the session state with the next session type upon timeout.
+ * @param focusDuration
+ *    the current focus duration
+ * @param breakDuration
+ *    the current break duration
+ * @returns
+ *  function to update the session state.
+ */
+function nextSession(focusDuration, breakDuration) {
+  /**
+   * State function to transition the current session type to the next session. e.g. On Break -> Focusing or Focusing -> On Break
+   */
+  return (currentSession) => {
+    if (currentSession.label === "Focusing") {
+      return {
+        label: "On Break",
+        timeRemaining: breakDuration * 60,
+      };
+    }
+    return {
+      label: "Focusing",
+      timeRemaining: focusDuration * 60,
+    };
+  };
+}
 
+function Pomodoro() {
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [session, setSession] = useState(null);
+
+  // ToDo: Allow the user to adjust the focus and break duration.
+  const [focusDuration, setFocusDuration] = useState(1500);
+  const [breakDuration, setBreakDuration] = useState(300);
+
+  /**
+   * Custom hook that invokes the callback function every second
+   *
+   * NOTE: You will not need to make changes to the callback function
+   */
+  useInterval(() => {
+      if (session.timeRemaining === 0) {
+        new Audio("https://bigsoundbank.com/UPLOAD/mp3/1482.mp3").play();
+        return setSession(nextSession(focusDuration, breakDuration));
+      }
+      return setSession(nextTick);
+    },
+    isTimerRunning ? 100 : null
+  );
 
   /**
    * Called whenever the play/pause button is clicked.
    */
   function playPause() {
-    setIsTimerRunning((prevState) => !prevState);
-      
-      if (!session.active) {
-        setSession({
-          ...session,
-          active: true,
-          currentTime: session.focusTime,
-          timer: session.focusTime,
+    setIsTimerRunning((prevState) => {
+      const nextState = !prevState;
+      if (nextState) {
+        setSession((prevStateSession) => {
+          // If the timer is starting and the previous session is null,
+          // start a focusing session.
+          if (prevStateSession === null) {
+            return {
+              label: "Focusing",
+              timeRemaining: focusDuration,
+            };
+          }
+          return prevStateSession;
         });
       }
-    }
-  const stopButtonHandler = () => {
-    setIsTimerRunning(false);
-    setSession({
-      ...session,
-      active: false,
-      focusSession: true,
+      return nextState;
     });
   }
-  
+
+  function stopTimer() {
+    setIsTimerRunning(false);
+    setSession(null);
+    setFocusDuration(1500); // set time in seconds
+    setBreakDuration(300); // set time in seconds
+  };
+
   return (
     <div className="pomodoro">
-      <div className="row">
-        <div className="col" data-testid="duration-focus">
-          <FocusTime
-            min={300}
-            max={3600}
-            label={"Focus Duration: "}
-            session={session}
-            setSession={setSession}
-          />
-        </div>
-        <div className="col">
-          <div className="float-right" data-testid="duration-break">
-            <BreakTime
-              min={60}
-              max={900}
-              label={"Break Duration: "}
-              session={session}
-              setSession={setSession}
-            />
-          </div>
-        </div>
-      </div>
+      <CreateSession
+        focusDuration={focusDuration}
+        setFocusDuration={setFocusDuration}
+        breakDuration={breakDuration}
+        setBreakDuration={setBreakDuration}
+        session={session}
+      />
+
       <div className="row">
         <div className="col">
           <div
@@ -131,28 +135,24 @@ function Pomodoro() {
                 })}
               />
             </button>
-            {/* Implement stopping the current focus or break session. and disable the stop button when there is no active session
-                This is done with ternary operator in onClick function */}
+            
             <button
               type="button"
-              disabled={!session.active}
-              className={classNames({
-                "btn": true,
-                "btn-primary": session.active,
-                "btn-secondary": !session.active,
-              })}
+              className={session !== null ? "btn btn-primary" : "btn btn-secondary"}
               data-testid="stop"
               title="Stop the session"
-              onClick={session.active ? stopButtonHandler : undefined}
+              disabled={session === null ? true : false}
+              onClick={stopTimer}
             >
               <span className="oi oi-media-stop" />
             </button>
           </div>
         </div>
       </div>
-      <RemainingTime
+      < DisplaySession
         session={session}
-        isTimerRunning={isTimerRunning}
+        focusDuration={focusDuration}
+        breakDuration={breakDuration}
       />
     </div>
   );
