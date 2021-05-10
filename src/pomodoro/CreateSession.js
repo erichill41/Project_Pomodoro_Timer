@@ -1,26 +1,26 @@
 import React from "react";
-import {secondsToDuration} from "../utils/duration";
+import { minutesToDuration } from "../utils/duration";
 
 function CreateSession({ focusDuration, setFocusDuration, breakDuration, setBreakDuration, session }) {
     // decrease break time by 5 minutes each time button is clicked
-    function decreaseFocusHandler() {
-        setFocusDuration((currentDuration) => Math.max(300, currentDuration - 300));
-    };
+    const decreaseFocusHandler = () => {
+        setFocusDuration((currentDuration) => Math.max(5, currentDuration - 5));
+      };
 
     // increase break time by 5 minutes each time button is clicked
-    function increaseFocusHandler() {
-        setFocusDuration((currentDuration) => Math.max(3600, currentDuration + 300));
-    };
+    const increaseFocusHandler = () => {
+        setFocusDuration((currentDuration) => Math.min(60, currentDuration + 5));
+      };
 
     // decrease by 1 minute every button click
-    function decreaseBreakHandler() {
-        setBreakDuration((currentDuration) => Math.max(60, currentDuration - 60));
-    };
+    const decreaseBreakHandler = () => {
+        setBreakDuration((currentDuration) => Math.max(1, currentDuration - 1));
+    }
 
     // increase by 1 minute every button click
-    function increaseBreakHandler() {
-        setBreakDuration((currentDuration) => Math.max(900, currentDuration + 60));
-    };
+    const increaseBreakHandler = () => {
+        setBreakDuration((currentDuration) => Math.min(15, currentDuration + 1))
+    }
 
     return (
         <div className="row">
@@ -28,7 +28,7 @@ function CreateSession({ focusDuration, setFocusDuration, breakDuration, setBrea
                 <div className="input-group input-group-lg mb-2">
                     <span className="input-group-text" data-testid="duration-focus">
                         {/* TODO: Update this text to display the current focus session duration */}
-                        Focus Duration: {secondsToDuration(focusDuration)}
+                        Focus Duration: {minutesToDuration(focusDuration)}
                     </span>
                     <div className="input-group-append">
                         <button
@@ -57,7 +57,7 @@ function CreateSession({ focusDuration, setFocusDuration, breakDuration, setBrea
                     <div className="input-group input-group-lg mb-2">
                         <span className="input-group-text" data-testid="duration-break">
                             {/* TODO: Update this text to display the current break session duration */}
-                            Break Duration: {secondsToDuration(breakDuration)}
+                            Break Duration: {minutesToDuration(breakDuration)}
                         </span>
                         <div className="input-group-append">
                             <button

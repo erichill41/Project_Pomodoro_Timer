@@ -55,8 +55,8 @@ function Pomodoro() {
   const [session, setSession] = useState(null);
 
   // ToDo: Allow the user to adjust the focus and break duration.
-  const [focusDuration, setFocusDuration] = useState(1500);
-  const [breakDuration, setBreakDuration] = useState(300);
+  const [focusDuration, setFocusDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
 
   /**
    * Custom hook that invokes the callback function every second
@@ -70,7 +70,7 @@ function Pomodoro() {
       }
       return setSession(nextTick);
     },
-    isTimerRunning ? 100 : null
+    isTimerRunning ? 1000 : null
   );
 
   /**
@@ -86,7 +86,7 @@ function Pomodoro() {
           if (prevStateSession === null) {
             return {
               label: "Focusing",
-              timeRemaining: focusDuration,
+              timeRemaining: focusDuration * 60,
             };
           }
           return prevStateSession;
@@ -99,8 +99,8 @@ function Pomodoro() {
   function stopTimer() {
     setIsTimerRunning(false);
     setSession(null);
-    setFocusDuration(1500); // set time in seconds
-    setBreakDuration(300); // set time in seconds
+    setFocusDuration(25); // set time in seconds
+    setBreakDuration(5); // set time in seconds
   };
 
   return (
