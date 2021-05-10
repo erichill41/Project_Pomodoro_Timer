@@ -23,8 +23,6 @@ This will be useful for anybody looking to split up their work sessions with a b
 - Learning how to use different more React Components together; working to have each component do one thing, but do it well.
 - Passing props to each component with useState so each component can be updated with each render of the page.
 - Learning to use new visual features of a webpage like the progress bar.
+- Struggled to manipulate some of the data, learning how to change the data in each component was good practice and learning lesson.
 
-### Current Issues
-- Focus duration will display correct intervals from 5-55 minutes. Will not display 60:00.
-- Will not start new focus session after the break session ends.
-- Progress bar will not increase on break session.
+
