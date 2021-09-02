@@ -4,7 +4,7 @@
 Created a timer application with focus and break session features. Users will be able to set the timeframe they would like to focus and also take a break.
 This will be useful for anybody looking to split up their work sessions with a break based on how long they'd like to work.
 
-[Live Pomodoro Timer](https://erichill41.github.io/Project_Pomodoro_Timer/)
+[Live Pomodoro Timer](https://pomodoro-timer-green.vercel.app/)
 
 ## Tools Used
 - HTML, CSS, JSX
